@@ -35,7 +35,7 @@ public class EventController {
     private final EventService eventService;
 
     @GetMapping("/")
-    public ResponseEntity<CollectionModel<EventResponseDto>> getAllEvents(
+    public ResponseEntity<List<EventResponseDto>> getAllEvents(
             @RequestParam(required = false) String location,
             @RequestParam(required = false) String visibility,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFrom,
@@ -44,7 +44,7 @@ public class EventController {
 
         events.forEach(e -> e.add(linkTo(methodOn(EventController.class).getEvent(e.getId())).withSelfRel()));
 
-        return ResponseEntity.ok(CollectionModel.of(events));
+        return ResponseEntity.ok(events);
     }
 
     @PostMapping("/")

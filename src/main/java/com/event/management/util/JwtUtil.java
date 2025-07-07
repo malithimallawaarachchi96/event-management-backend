@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import com.event.management.security.CustomUserDetails;
 
 @Component
 public class JwtUtil {
@@ -20,10 +21,13 @@ public class JwtUtil {
     private long expirationMs;
 
     public String generateToken(UserDetails userDetails) {
+        CustomUserDetails customUserDetails = (CustomUserDetails) userDetails;
         return Jwts.builder()
-                .setSubject(userDetails.getUsername())
+                .setSubject(customUserDetails.getUsername())
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + expirationMs))
+                .claim("userId", customUserDetails.getId().toString())
+                .claim("role", customUserDetails.getAuthorities().iterator().next().getAuthority())
                 .signWith(Keys.hmacShaKeyFor(secret.getBytes()), SignatureAlgorithm.HS256)
                 .compact();
     }
