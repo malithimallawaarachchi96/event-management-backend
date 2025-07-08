@@ -23,4 +23,7 @@ public interface EventRepository extends JpaRepository<Event, UUID> {
     List<Event> findByStartTimeAfterAndDeletedFalse(LocalDateTime startTime);
 
     List<Event> findByHost(User host);
+
+    @Query("SELECT e FROM Event e WHERE e.host = :host AND e.deleted = false")
+    List<Event> findByHostAndDeletedFalse(@Param("host") User host);
 }

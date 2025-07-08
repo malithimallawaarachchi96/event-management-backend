@@ -76,6 +76,13 @@ public class EventServiceImpl implements EventService {
                 Event event = eventRepository.findById(eventId)
                                 .orElseThrow(() -> new ResourceNotFoundException("Event not found"));
 
+                // Delete all attendance records for this event
+                List<Attendance> attendances = attendanceRepository.findByEvent(event);
+                if (!attendances.isEmpty()) {
+                        attendanceRepository.deleteAll(attendances);
+                        log.info("Deleted {} attendance records for event ID: {}", attendances.size(), eventId);
+                }
+
                 event.setDeleted(true);
                 eventRepository.save(event);
 
@@ -183,11 +190,18 @@ public class EventServiceImpl implements EventService {
                 User user = userRepository.findById(userId)
                                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-                List<Event> hosted = eventRepository.findByHost(user);
+                // Get hosted events that are not deleted
+                List<Event> hosted = eventRepository.findByHostAndDeletedFalse(user);
+                
+                // Get attending events that are not deleted
                 List<Attendance> attending = attendanceRepository.findByUser(user);
+                List<Event> attendingEvents = attending.stream()
+                                .map(Attendance::getEvent)
+                                .filter(event -> !event.isDeleted())
+                                .collect(Collectors.toList());
 
                 Set<Event> allEvents = new HashSet<>(hosted);
-                attending.forEach(a -> allEvents.add(a.getEvent()));
+                allEvents.addAll(attendingEvents);
 
                 return allEvents.stream()
                                 .map(EventMapper::toDto)
